@@ -1,0 +1,41 @@
+# build output
+dist/
+.output/
+.json/
+.vercel
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+
+# Local runtime and browser-verification artifacts
+/logs/
+/.playwright-cli/
+/.playwright-mcp/
+/.omo/
+/.codegraph
+
+
+# environment variables
+.env
+.env.production
+.env.local
+.env.*.local
+
+# Service-account credentials (server-only; never commit)
+*service-account*.json
+
+# macOS-specific files
+.DS_Store
+
+# ignore .astro directory
+.astro
+.claude
+# ide
+.idea/

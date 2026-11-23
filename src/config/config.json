@@ -1,0 +1,36 @@
+{
+  "site": {
+    "title": "VLABS | Science Practice Across Subjects",
+    "base_url": "https://learningsmart.io.vn",
+    "base_path": "/",
+    "trailing_slash": false,
+    "favicon": "/images/logo.png",
+    "logo": "/images/logo.png",
+    "logo_width": "44",
+    "logo_height": "44",
+    "logo_text": "VLABS"
+  },
+  "settings": {
+    "sticky_header": true
+  },
+  "params": {
+    "copyright": "&copy; 2026 Smart Learning Technology Solution. All Rights Reserved.",
+    "footer_tagline": "Hands-on learning across the sciences, where students can observe, experiment, and gradually discover answers for themselves. VLABS makes complex concepts more visual and easier to understand, while helping teachers organise learning and guide every student along the way.",
+    "footer_email": "info.vlabs@learningsmart.io.vn",
+    "footer_phone": "(+84) 766 223 476"
+  },
+  "navigation_button": {
+    "enable": false,
+    "label": "Request a Demo",
+    "link": "/contact#demo"
+  },
+  "google_tag_manager": {
+    "enable": false,
+    "gtm_id": "GTM-XXXXXX"
+  },
+  "metadata": {
+    "meta_author": "VLABS",
+    "meta_image": "/images/logo.png",
+    "meta_description": "Hands-on learning across the sciences, where students can observe, experiment, and gradually discover answers for themselves. VLABS makes complex concepts more visual and easier to understand, while helping teachers organise learning and guide every student along the way."
+  }
+}

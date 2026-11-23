@@ -1,0 +1,127 @@
+---
+import Base from "@/layouts/Base.astro";
+import CallToAction from "@/layouts/components/CallToAction.astro";
+import ImageMod from "@/layouts/components/ImageMod.astro";
+import PageHeader from "@/layouts/components/PageHeader.astro";
+import ScreenshotLightbox from "@/layouts/components/ScreenshotLightbox.astro";
+import { markdownify } from "@/lib/utils/textConverter";
+import { localePath, type Locale } from "@/lib/i18n";
+import { getMessages, getScreenshotCopy } from "@/lib/messages";
+import type { CollectionEntry } from "astro:content";
+
+interface Props { locale: Locale; study: CollectionEntry<"caseStudy"> }
+const { study, locale } = Astro.props;
+const copy = getMessages(locale);
+const data = study.data;
+const screen = getScreenshotCopy(data.image, locale);
+---
+
+<Base {...data} locale={locale}>
+  <PageHeader title={data.title} subtitle={data.description} />
+  <section class="section pt-0">
+    <div class="container">
+      <div class="notice mb-10">
+        <h2 class="mb-3 text-xl">{copy.caseStudy.noticeTitle}</h2>
+        <p>
+          {copy.caseStudy.notice}
+        </p>
+      </div>
+      <div class="grid items-center gap-8 lg:grid-cols-2">
+        {
+          data.image && (
+            <figure
+              class={screen ? "hero-visual product-figure" : "hero-visual"}
+            >
+              <ScreenshotLightbox locale={locale} caption={screen?.caption}>
+                <ImageMod
+                  src={data.image}
+                  alt={copy.alt.caseStudy}
+                  width={560}
+                  height={420}
+                  class={screen ? "w-full product-screenshot" : "w-full"}
+                />
+              </ScreenshotLightbox>
+              {screen && (
+                <figcaption class="screenshot-caption">
+                  {screen.caption}
+                </figcaption>
+              )}
+            </figure>
+          )
+        }
+        <div>
+          {data.category && <h2 class="mb-6 text-2xl">{data.category}</h2>}
+          {
+            data.context && (
+              <dl class="space-y-5">
+                {data.context.map((item) => (
+                  <div>
+                    <dt class="text-sm text-text-dark">{item.label}</dt>
+                    <dd class="mt-1 font-semibold text-heading">
+                      {item.value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            )
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="container max-w-4xl">
+    {
+      data.overview && (
+        <section class="section-sm narrative-section">
+          <h2 class="mb-6">{data.overview.title}</h2>
+          <div
+            class="narrative"
+            set:html={markdownify(data.overview.content, true)}
+          />
+        </section>
+      )
+    }
+    {
+      data.challenges && (
+        <section class="section-sm narrative-section">
+          <h2 class="mb-6">{data.challenges.title}</h2>
+          <div
+            class="narrative"
+            set:html={markdownify(data.challenges.content, true)}
+          />
+        </section>
+      )
+    }
+    {
+      data.solution && (
+        <section class="section-sm narrative-section">
+          <h2 class="mb-6">{data.solution.title}</h2>
+          <p class="mb-6">{data.solution.content}</p>
+          <ol class="list-decimal space-y-4 pl-6 marker:font-semibold marker:text-primary">
+            {data.solution.items.map((item) => (
+              <li class="pl-2">{item}</li>
+            ))}
+          </ol>
+        </section>
+      )
+    }
+    {
+      data.evaluation && (
+        <section class="section-sm narrative-section">
+          <h2 class="mb-6">{data.evaluation.title}</h2>
+          <p class="mb-6">{data.evaluation.content}</p>
+          <ul class="list-disc space-y-4 pl-6 marker:text-primary">
+            {data.evaluation.items.map((item) => (
+              <li class="pl-2">{item}</li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+    <div class="py-8">
+      <a href={localePath("/case-study", locale)} class="btn btn-outline">{copy.caseStudy.back}</a>
+    </div>
+  </div>
+  <CallToAction locale={locale} />
+</Base>

@@ -1,0 +1,22 @@
+---
+import CareerPage from "@/layouts/pages/CareerPage.astro";
+import NotFoundPage from "@/layouts/pages/NotFoundPage.astro";
+import { getSinglePage } from "@/lib/contentParser.astro";
+import { canonicalId } from "@/lib/i18n";
+
+// All role profiles are withdrawn; retain their content and existing template.
+const withdrawn = true;
+const roles = withdrawn ? [] : await getSinglePage("careers", "en");
+const role = roles.find(
+  (entry) => canonicalId(entry.id) === Astro.params.single,
+);
+if (!role) Astro.response.status = 404;
+---
+
+{
+  role ? (
+    <CareerPage role={role} locale="en" />
+  ) : (
+    <NotFoundPage locale="en" />
+  )
+}

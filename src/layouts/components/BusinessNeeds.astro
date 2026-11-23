@@ -1,0 +1,29 @@
+---
+import StepCard from "./StepCard.astro";
+import { getListPage } from "@/lib/contentParser.astro";
+import { markdownify } from "@/lib/utils/textConverter";
+import type { Locale } from "@/lib/i18n";
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const { data } = await getListPage("businessNeedsSection", "business-needs", locale);
+---
+
+{
+  data.enable && (
+    <section class="section">
+      <div class="container max-w-5xl section-container">
+        <div class="section-intro centralize">
+          <h2 class="title hasHighlight" set:html={markdownify(data.title)} />
+        </div>
+        <ol>
+          {data.items.map((item) => (
+            <li>
+              <StepCard {...item} />
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  )
+}

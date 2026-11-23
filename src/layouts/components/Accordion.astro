@@ -1,0 +1,14 @@
+---
+interface Props {
+  title: string;
+  content?: string;
+}
+const { title, content } = Astro.props;
+---
+
+<details class="accordion">
+  <summary class="accordion-header">{title}</summary>
+  <div class="accordion-content">
+    {content ? <p>{content}</p> : <slot />}
+  </div>
+</details>

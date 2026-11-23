@@ -1,0 +1,89 @@
+---
+import type { ImageMetadata } from "astro";
+import type { HTMLAttributes } from "astro/types";
+import { Image } from "astro:assets";
+
+interface Props {
+  src: string;
+  alt: string;
+  width?: number;
+  height?: number;
+  loading?: "eager" | "lazy";
+  fetchpriority?: "high" | "low" | "auto";
+  decoding?: "async" | "auto" | "sync";
+  format?: "auto" | "avif" | "jpeg" | "png" | "svg" | "webp";
+  fit?: "cover" | "contain" | "fill" | "none" | "scale-down";
+  class?: string;
+  style?: HTMLAttributes<"img">["style"];
+}
+
+const {
+  src,
+  alt,
+  width,
+  height,
+  loading = "lazy",
+  fetchpriority = "auto",
+  decoding = "async",
+  class: className,
+  format,
+  style,
+  fit = "contain",
+} = Astro.props;
+
+const images = import.meta.glob<{ default: ImageMetadata }>(
+  "/public/images/**/*.{avif,gif,jpeg,jpg,png,svg,webp}",
+);
+let externalImageUrl: string | undefined;
+try {
+  const candidate = new URL(src);
+  if (
+    candidate.protocol === "https:" &&
+    !candidate.username &&
+    !candidate.password
+  ) {
+    externalImageUrl = candidate.href;
+  }
+} catch {
+  // Local paths are handled by the image glob below.
+}
+const loadImage = externalImageUrl ? undefined : images[`/public${src}`];
+const image = loadImage ? (await loadImage()).default : undefined;
+
+if (!image && !externalImageUrl) console.warn(`Image not found: ${src}`);
+---
+
+{
+  externalImageUrl ? (
+    <img
+      src={externalImageUrl}
+      alt={alt}
+      width={width}
+      height={height}
+      loading={loading}
+      fetchpriority={fetchpriority}
+      decoding={decoding}
+      class={className}
+      style={style}
+      referrerpolicy="no-referrer"
+    />
+  ) : image ? (
+    <Image
+      src={image}
+      alt={alt}
+      width={width}
+      height={height}
+      loading={loading}
+      fetchpriority={fetchpriority}
+      decoding={decoding}
+      fit={fit}
+      class={className}
+      format={format}
+      style={style}
+    />
+  ) : alt ? (
+    <span class="image-fallback" role="img" aria-label={alt}>
+      {alt}
+    </span>
+  ) : null
+}

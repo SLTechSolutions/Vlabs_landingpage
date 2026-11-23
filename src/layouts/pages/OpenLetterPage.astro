@@ -1,0 +1,115 @@
+---
+import Base from "@/layouts/Base.astro";
+import ImageMod from "@/layouts/components/ImageMod.astro";
+import { getListPage } from "@/lib/contentParser.astro";
+import { localizeHref, localePath, type Locale } from "@/lib/i18n";
+import config from "@/config/config.json";
+import { serializeJsonLd } from "@/lib/seo";
+import type { OpenLetter } from "@/types";
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const openLetter = await getListPage("openLetter", "-index", locale);
+const data: OpenLetter = openLetter.data;
+const { founder } = data;
+const portraitAlt =
+  locale === "vi"
+    ? `Chân dung ${founder.name}, nhà sáng lập Smart Learning Technology Solution`
+    : `Portrait of ${founder.name}, founder of Smart Learning Technology Solution`;
+const signatureAlt =
+  locale === "vi"
+    ? `Chữ ký của ${founder.name}`
+    : `Signature of ${founder.name}`;
+
+// Parse the authored month, without inventing a day or using locale/timezone defaults.
+function publicationMonth(value: string): string {
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+  ];
+  const english = value.match(/^(\w+) (\d{4})$/);
+  const vietnamese = value.match(/^Tháng (\d{1,2}), (\d{4})$/);
+  const year = english?.[2] || vietnamese?.[2];
+  const month = english ? months.indexOf(english[1]) + 1 : Number(vietnamese?.[1]);
+  if (!year || !Number.isInteger(month) || month < 1 || month > 12)
+    throw new Error("Unsupported source publication month.");
+  return `${year}-${String(month).padStart(2, "0")}`;
+}
+const pageUrl = new URL(localePath("/open-letter", locale), config.site.base_url).href;
+const openLetterSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "@id": `${pageUrl}#webpage`,
+  url: pageUrl,
+  datePublished: publicationMonth(data.date),
+};
+---
+
+<Base {...data} locale={locale} socialImageAlt={portraitAlt}>
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={serializeJsonLd(openLetterSchema)}
+  />
+  <section class="section">
+    <div class="container">
+      <article class="open-letter" aria-labelledby="open-letter-title">
+        <header class="open-letter-header">
+          <h1 id="open-letter-title">{data.title}</h1>
+          <div class="open-letter-founder">
+            <ImageMod
+              src={founder.image}
+              alt={portraitAlt}
+              width={768}
+              height={1344}
+              loading="eager"
+              fetchpriority="high"
+              class="open-letter-portrait"
+            />
+            <div class="open-letter-byline">
+              <p class="open-letter-name">{founder.name}</p>
+              <p class="open-letter-role">{founder.role}, Smart Learning Technology Solution</p>
+            </div>
+          </div>
+        </header>
+
+        <div class="open-letter-body">
+          <p class="open-letter-salutation">{data.salutation}</p>
+          {data.paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+          <p>{data.closing}</p>
+
+          <div class="open-letter-signoff">
+            <div class="open-letter-signature">
+              <ImageMod
+                src={founder.signature}
+                alt={signatureAlt}
+                width={505}
+                height={291}
+                class="open-letter-signature-image"
+              />
+            </div>
+            <p class="open-letter-name">{founder.name}</p>
+            <p class="open-letter-role">{founder.role}, Smart Learning Technology Solution</p>
+            <p class="open-letter-date">{data.date}</p>
+                        {
+              data.button.enable && (
+                <div class="open-letter-actions">
+                  <a
+                    href={localizeHref(data.button.link, locale)}
+                    class="btn btn-primary"
+                  >
+                    {data.button.label}
+                  </a>
+                </div>
+            )
+            }
+            </div>
+
+
+        </div>
+      </article>
+    </div>
+  </section>
+</Base>

@@ -1,0 +1,65 @@
+---
+import Logo from "@/layouts/components/Logo.astro";
+import Social from "@/layouts/components/Social.astro";
+import config from "@/config/config.json";
+import { localizedMenu, type Locale } from "@/lib/i18n";
+import { getMessages } from "@/lib/messages";
+import social from "@/config/social.json";
+import { markdownify } from "@/lib/utils/textConverter";
+import type { SocialLink } from "@/types";
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const menu = localizedMenu(locale);
+const copy = getMessages(locale);
+const footerGroups = [
+  { title: menu.footer_col_1_title, links: menu.footer_primary },
+  { title: menu.footer_col_2_title, links: menu.footer_resource },
+  { title: menu.footer_col_3_title, links: menu.footer_legal },
+];
+const phoneHref = `tel:${config.params.footer_phone.replace(/[^+\d]/g, "")}`;
+const socialLinks: SocialLink[] = social.main;
+---
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="max-w-sm">
+        <Logo locale={locale} />
+        <p class="mt-5">{locale === "en" ? config.params.footer_tagline : copy.common.footerTagline}</p>
+        <address class="mt-5 space-y-3 not-italic">
+          <a class="link block" href={`mailto:${config.params.footer_email}`}
+            >{config.params.footer_email}</a
+          >
+          <a class="link block" href={phoneHref}>{config.params.footer_phone}</a
+          >
+        </address>
+      </div>
+      {
+        footerGroups.map((group) => (
+          <nav aria-label={`${copy.common.footerNavigation} ${group.title}`}>
+            <h2 class="footer-label">{group.title}</h2>
+            <ul class="space-y-1">
+              {group.links.map((item) => (
+                <li>
+                  <a href={item.url} class="footer-link">
+                    {item.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ))
+      }
+    </div>
+    <div class="footer-bottom">
+      <div>
+        <p
+          class="text-sm text-text-dark"
+          set:html={markdownify(locale === "en" ? config.params.copyright : copy.common.copyright)}
+        />
+      </div>
+      {socialLinks.length > 0 && <Social source={socialLinks} locale={locale} />}
+    </div>
+  </div>
+</footer>

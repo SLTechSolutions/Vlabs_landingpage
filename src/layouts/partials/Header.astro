@@ -1,0 +1,112 @@
+---
+import Logo from "@/layouts/components/Logo.astro";
+import LanguageSelector from "@/layouts/components/LanguageSelector.astro";
+import DynamicIcon from "@/helpers/DynamicIcon";
+import config from "@/config/config.json";
+import { localizeHref, localizedMenu, type Locale } from "@/lib/i18n";
+import { getMessages } from "@/lib/messages";
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const menu = localizedMenu(locale);
+const copy = getMessages(locale);
+const { navigation_button, settings } = config;
+const pathname = Astro.url.pathname.replace(/\/$/, "") || "/";
+const isActive = (url: string) =>
+  pathname === url || pathname.startsWith(`${url}/`);
+---
+
+<header class:list={["header", { "header-sticky": settings.sticky_header }]}>
+  <nav class="container header-inner" aria-label={copy.common.mainNavigation}>
+    <Logo loading="eager" locale={locale} />
+    <ul class="desktop-navigation">
+      {
+        menu.main.map((item) => (
+          <li>
+            <a
+              href={item.url}
+              class:list={["nav-link", { active: isActive(item.url) }]}
+              aria-current={pathname === item.url ? "page" : undefined}
+            >
+              {item.name}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+    {
+      navigation_button.enable && (
+        <a
+          class="btn btn-primary btn-sm desktop-navigation-cta"
+          href={localizeHref(navigation_button.link, locale)}
+        >
+          {locale === "vi" ? copy.common.requestDemo : navigation_button.label}
+        </a>
+      )
+    }
+    <div class="header-actions">
+      <button
+        class="theme-toggle"
+        type="button"
+        data-theme-toggle
+        role="switch"
+        aria-label={copy.common.darkMode}
+        data-theme-light-label={copy.common.switchLight}
+        data-theme-dark-label={copy.common.switchDark}
+        aria-checked="false"
+        hidden
+      >
+        <span class="theme-toggle-track" aria-hidden="true">
+          <span class="theme-toggle-thumb">
+            <span class="theme-toggle-icon theme-sun-icon">
+              <DynamicIcon icon="FaSun" aria-hidden="true" focusable="false" />
+            </span>
+            <span class="theme-toggle-icon theme-moon-icon">
+              <DynamicIcon icon="FaMoon" aria-hidden="true" focusable="false" />
+            </span>
+          </span>
+        </span>
+      </button>
+      <LanguageSelector locale={locale} />
+      <details class="mobile-navigation">
+        <summary aria-controls="mobile-menu" aria-label={copy.common.menu}>
+          <DynamicIcon
+            icon="FaBars"
+            className="menu-open-icon"
+            aria-hidden="true"
+          />
+          <DynamicIcon
+            icon="FaXmark"
+            className="menu-close-icon"
+            aria-hidden="true"
+          />
+          <span class="menu-label">{copy.common.menu}</span>
+        </summary>
+        <ul id="mobile-menu" class="mobile-menu">
+          {
+            menu.main.map((item) => (
+              <li>
+                <a
+                  href={item.url}
+                  class:list={["nav-link", { active: isActive(item.url) }]}
+                  aria-current={pathname === item.url ? "page" : undefined}
+                >
+                  {item.name}
+                </a>
+              </li>
+            ))
+          }
+          {
+            navigation_button.enable && (
+              <li class="p-3">
+                <a class="btn btn-primary w-full" href={localizeHref(navigation_button.link, locale)}>
+                  {locale === "vi" ? copy.common.requestDemo : navigation_button.label}
+                </a>
+              </li>
+            )
+          }
+        </ul>
+      </details>
+    </div>
+  </nav>
+</header>

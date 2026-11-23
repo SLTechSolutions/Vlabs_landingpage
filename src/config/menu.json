@@ -1,0 +1,65 @@
+{
+  "main": [
+    {
+      "name": "Open Letter",
+      "url": "/open-letter"
+    },
+    {
+      "name": "Features",
+      "url": "/features"
+    },
+    {
+      "name": "Integrations",
+      "url": "/integrations"
+    },
+    {
+      "name": "Pricing",
+      "url": "/pricing"
+    },
+    {
+      "name": "Contact",
+      "url": "/contact"
+    }
+  ],
+  "footer_col_1_title": "Platform",
+  "footer_col_2_title": "Explore",
+  "footer_col_3_title": "Policies",
+  "footer_primary": [
+    {
+      "name": "Home",
+      "url": "/"
+    },
+    {
+      "name": "Features",
+      "url": "/features"
+    },
+    {
+      "name": "Pricing",
+      "url": "/pricing"
+    },
+    {
+      "name": "Contact",
+      "url": "/contact"
+    }
+  ],
+  "footer_resource": [
+    {
+      "name": "Integrations",
+      "url": "/integrations"
+    },
+    {
+      "name": "Open Letter",
+      "url": "/open-letter"
+    }
+  ],
+  "footer_legal": [
+    {
+      "name": "Privacy Policy",
+      "url": "/privacy-policy"
+    },
+    {
+      "name": "Terms and Conditions",
+      "url": "/term-and-condition"
+    }
+  ]
+}

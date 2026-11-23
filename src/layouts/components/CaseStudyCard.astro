@@ -1,0 +1,41 @@
+---
+import ImageMod from "./ImageMod.astro";
+import type { Locale } from "@/lib/i18n";
+import { getMessages } from "@/lib/messages";
+
+interface Props {
+  locale: Locale;
+  image?: string;
+  title: string;
+  description?: string;
+  href: string;
+}
+const { image, title, description, href, locale } = Astro.props;
+const copy = getMessages(locale).caseStudy;
+---
+
+<article class="overflow-hidden rounded-2xl border border-border bg-light">
+  {
+    image && (
+      <div class="grid place-items-center p-6 md:p-8">
+        <ImageMod
+          src={image}
+          alt=""
+          width={520}
+          height={390}
+          class="w-full max-w-lg"
+        />
+      </div>
+    )
+  }
+  <div class="p-6 pt-2 md:p-8 md:pt-2">
+    <p class="mb-3 text-sm font-semibold text-primary">{copy.noticeTitle}</p>
+    <h2 class="mb-4 text-2xl">
+      <a class="heading-link" href={href}>{title}</a>
+    </h2>
+    {description && <p>{description}</p>}
+    <a href={href} class="link mt-6 inline-block"
+      >{copy.explore}<span class="sr-only">: {title}</span></a
+    >
+  </div>
+</article>

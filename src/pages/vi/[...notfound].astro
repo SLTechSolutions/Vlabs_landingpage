@@ -1,0 +1,9 @@
+---
+import NotFoundPage from "@/layouts/pages/NotFoundPage.astro";
+
+// Only unknown Vietnamese paths are rendered on demand. All content stays static.
+export const prerender = false;
+Astro.response.status = 404;
+---
+
+<NotFoundPage locale="vi" />

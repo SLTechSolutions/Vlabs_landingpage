@@ -1,0 +1,22 @@
+---
+import ImageMod from "./ImageMod.astro";
+
+interface Props {
+  logo: string;
+  title: string;
+  content: string;
+}
+const { logo, title, content } = Astro.props;
+---
+
+<article class="border-t-2 border-primary py-7 md:pr-6">
+  <ImageMod
+    src={logo}
+    alt=""
+    width={36}
+    height={36}
+    class="mb-5 size-9 theme-icon"
+  />
+  <h3 class="mb-3 text-xl">{title}</h3>
+  <p>{content}</p>
+</article>

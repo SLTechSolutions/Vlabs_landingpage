@@ -1,0 +1,72 @@
+---
+import Base from "@/layouts/Base.astro";
+import EnquiryForm from "@/layouts/components/EnquiryForm.astro";
+import Faq from "@/layouts/components/Faq.astro";
+import PageHeader from "@/layouts/components/PageHeader.astro";
+import DynamicIcon from "@/helpers/DynamicIcon";
+import { getListPage } from "@/lib/contentParser.astro";
+import { localizeHref, type Locale } from "@/lib/i18n";
+import { getMessages } from "@/lib/messages";
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const copy = getMessages(locale);
+const { data } = await getListPage("contact", "-index", locale);
+---
+
+<Base {...data} locale={locale}>
+  <PageHeader
+    title={data.page_header.title}
+    subtitle={data.page_header.subtitle}
+  />
+  <section class="section pt-0">
+    <div
+      class="container grid items-start gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-12"
+    >
+      <div>
+        <h2 class="mb-6 text-h3">{copy.contact.team}</h2>
+        {
+          data.contact_info.enable && (
+            <ul class="space-y-4">
+              {data.contact_info.items.map((item) => (
+                <li>
+                  <a href={localizeHref(item.link, locale)} class="contact-card">
+                    <DynamicIcon
+                      icon={item.icon}
+                      className="shrink-0 text-2xl text-primary"
+                      aria-hidden="true"
+                    />
+                    <div class="min-w-0">
+                      <h3 class="mb-2 text-xl">{item.title}</h3>
+                      <p>{item.detail}</p>
+                    </div>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )
+        }
+        <p class="mt-6 text-sm text-text-dark">
+          {copy.contact.notice}
+        </p>
+      </div>
+      <div
+        id="demo"
+        tabindex="-1"
+        class="rounded-2xl border border-border bg-light p-6 md:p-8"
+      >
+        <h2 class="mb-4 text-h3">{copy.contact.enquiry}</h2>
+        <p class="mb-7">
+          {copy.contact.help}
+        </p>
+        <EnquiryForm
+          id="contact-form"
+          kind="contact"
+          submitLabel={copy.contact.submit}
+          locale={locale}
+        />
+      </div>
+    </div>
+  </section>
+  <Faq locale={locale} />
+</Base>

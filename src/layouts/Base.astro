@@ -1,0 +1,250 @@
+---
+import config from "@/config/config.json";
+import theme from "@/config/theme.json";
+import { plainify } from "@/lib/utils/textConverter";
+import { localePath, type Locale } from "@/lib/i18n";
+import { currencyForLocale } from "@/lib/currency";
+import { getMessages } from "@/lib/messages";
+import { buildSiteSchema, serializeJsonLd } from "@/lib/seo";
+import Footer from "@/partials/Footer.astro";
+import Header from "@/partials/Header.astro";
+import "@/styles/main.css";
+import { Font, type CssVariable } from "astro:assets";
+import {
+  GoogleTagmanager,
+  GoogleTagmanagerNoscript,
+} from "@digi4care/astro-google-tagmanager";
+
+export interface Props {
+  locale: Locale;
+  title?: string;
+  meta_title?: string;
+  description?: string;
+  image?: string;
+  socialImageAlt?: string;
+  noindex?: boolean;
+  canonical?: string;
+  canonicalPath?: string;
+  markdownPath?: string;
+}
+
+const {
+  title,
+  meta_title,
+  description,
+  image,
+  socialImageAlt,
+  noindex,
+  canonical,
+  canonicalPath,
+  markdownPath,
+  locale,
+} = Astro.props;
+const copy = getMessages(locale);
+const pageTitle = plainify(
+  meta_title ||
+    title ||
+    (locale === "en" ? config.site.title : copy.meta.title),
+);
+const pageDescription = plainify(
+  description ||
+    (locale === "en"
+      ? config.metadata.meta_description
+      : copy.meta.description),
+);
+const pagePath = canonicalPath || Astro.url.pathname;
+const pageUrl = new URL(localePath(pagePath, locale), config.site.base_url)
+  .href;
+const englishUrl = new URL(localePath(pagePath, "en"), config.site.base_url)
+  .href;
+const vietnameseUrl = new URL(localePath(pagePath, "vi"), config.site.base_url)
+  .href;
+const socialImage =
+  image && !image.endsWith(".svg") ? image : config.metadata.meta_image;
+const socialImageUrl = new URL(socialImage, config.site.base_url).href;
+const socialImageMetadata: Record<string, { width: number; height: number; alt: string }> = {
+  "/images/logo.png": {
+    width: 480,
+    height: 480,
+    alt: locale === "en" ? "VLABS logo" : "Logo VLABS",
+  },
+  // The page supplies its existing, source-derived portrait description.
+  "/images/ceo.jpeg": { width: 768, height: 768, alt: "" },
+};
+const socialImageMeta = Object.hasOwn(socialImageMetadata, socialImage)
+  ? socialImageMetadata[socialImage]
+  : undefined;
+const socialAlt = socialImageAlt ?? socialImageMeta?.alt;
+const siteSchema = buildSiteSchema(
+  config.site.base_url,
+  config.site.logo,
+  copy.meta.description,
+);
+type FontKey = Exclude<keyof typeof theme.fonts.font_family, `${string}_type`>;
+const systemFamilies = new Set(
+  ((theme.fonts as { system_families?: string[] }).system_families ?? []).map(
+    (name) => name.toLowerCase(),
+  ),
+);
+const fontEntries = Object.keys(theme.fonts.font_family).filter(
+  (key): key is FontKey => {
+    if (key.includes("_type")) return false;
+    const raw = String(
+      (theme.fonts.font_family as Record<string, string>)[key] ?? "",
+    ).split(":")[0]!;
+    return !systemFamilies.has(raw.replace(/\+/g, " ").toLowerCase());
+  },
+);
+---
+
+<!doctype html>
+<html lang={locale} data-currency={currencyForLocale(locale)}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <meta
+      name="theme-color"
+      data-theme-color="light"
+      media="(prefers-color-scheme: light)"
+      content="#FFFFFF"
+    />
+    <meta
+      name="theme-color"
+      data-theme-color="dark"
+      media="(prefers-color-scheme: dark)"
+      content="#11192B"
+    />
+    <script is:inline>
+      (function () {
+        let preference;
+        try {
+          preference = window.localStorage.getItem("vlabs-theme");
+        } catch {}
+        const theme =
+          preference === "light" || preference === "dark"
+            ? preference
+            : window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+        document.documentElement.dataset.theme = theme;
+        document.querySelectorAll("[data-theme-color]").forEach((meta) => {
+          meta.setAttribute(
+            "media",
+            meta.dataset.themeColor === theme ? "all" : "not all",
+          );
+        });
+      })();
+    </script>
+    <script is:inline data-locale-bootstrap>
+      (function () {
+        const root = document.documentElement;
+        const valid = (value) =>
+          value === "en" || value === "vi" ? value : null;
+        const url = new URL(window.location.href);
+        const markers = url.searchParams.getAll("lang");
+        const marker = markers.length === 1 ? valid(markers[0]) : null;
+        let saved = null;
+        let storage;
+        try {
+          storage = window.localStorage;
+          saved = valid(storage.getItem("vlabs-locale-v1"));
+        } catch {}
+        if (marker) {
+          try {
+            storage?.setItem("vlabs-locale-v1", marker);
+          } catch {}
+        }
+        const manual = marker || saved;
+        root.dataset.localeManual = manual || "";
+        root.dataset.localeSource = marker
+          ? "query"
+          : saved
+            ? "storage"
+            : /^\/vi(?:\/|$)/.test(url.pathname)
+              ? "path"
+              : "default";
+        if (!manual) return;
+        const path = url.pathname.replace(/^\/vi(?=\/|$)/, "") || "/";
+        const normalized = path === "/" ? "/" : path.replace(/\/+$/, "");
+        const target =
+          manual === "vi"
+            ? `/vi${normalized === "/" ? "" : normalized}`
+            : normalized;
+        if (target !== url.pathname) {
+          url.pathname = target;
+          root.dataset.localeRedirect = "true";
+          window.location.replace(url.href);
+        }
+      })();
+    </script>
+    <link rel="icon" href={config.site.favicon} />
+    {
+      config.google_tag_manager.enable && (
+        <GoogleTagmanager id={config.google_tag_manager.gtm_id} />
+      )
+    }
+    {
+      fontEntries.map((key) => (
+        <Font cssVariable={`--font-${key}` as unknown as CssVariable} preload />
+      ))
+    }
+    <title>{pageTitle}</title>
+    <link rel="canonical" href={canonical || pageUrl} />
+    <link rel="alternate" hreflang="en" href={englishUrl} />
+    <link rel="alternate" hreflang="vi" href={vietnameseUrl} />
+    <link rel="alternate" hreflang="x-default" href={englishUrl} />
+    <link rel="describedby" href="/llms.txt" />
+    {
+      markdownPath && (
+        <link
+          rel="alternate"
+          type="text/markdown"
+          href={new URL(markdownPath, config.site.base_url).href}
+        />
+      )
+    }
+    <script
+      is:inline
+      type="application/ld+json"
+      set:html={serializeJsonLd(siteSchema)}
+    />
+    {noindex && <meta name="robots" content="noindex,follow" />}
+    <meta name="description" content={pageDescription} />
+    <meta name="author" content={config.metadata.meta_author} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDescription} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="VLABS" />
+    <meta property="og:locale" content={locale === "vi" ? "vi_VN" : "en_US"} />
+    <meta property="og:url" content={canonical || pageUrl} />
+    <meta property="og:image" content={socialImageUrl} />
+    {
+      socialImageMeta && (
+        <>
+          <meta property="og:image:width" content={String(socialImageMeta.width)} />
+          <meta property="og:image:height" content={String(socialImageMeta.height)} />
+          <meta property="og:image:alt" content={socialAlt} />
+        </>
+      )
+    }
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={pageDescription} />
+    <meta name="twitter:image" content={socialImageUrl} />
+    {socialImageMeta && <meta name="twitter:image:alt" content={socialAlt} />}
+    <meta name="twitter:card" content="summary" />
+    <script is:inline defer src="/scripts/main.js"></script>
+    <script is:inline defer src="/scripts/locale.js"></script>
+  </head>
+  <body>
+    {
+      config.google_tag_manager.enable && (
+        <GoogleTagmanagerNoscript id={config.google_tag_manager.gtm_id} />
+      )
+    }
+    <a class="skip-link" href="#main-content">{copy.common.skip}</a>
+    <Header locale={locale} />
+    <main id="main-content" tabindex="-1"><slot /></main>
+    <Footer locale={locale} />
+  </body>
+</html>

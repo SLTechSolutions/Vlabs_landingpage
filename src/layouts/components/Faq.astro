@@ -1,0 +1,40 @@
+---
+import Accordion from "./Accordion.astro";
+import { getListPage } from "@/lib/contentParser.astro";
+import { markdownify } from "@/lib/utils/textConverter";
+import type { Locale } from "@/lib/i18n";
+import config from "@/config/config.json";
+import { buildFaqSchema, serializeJsonLd } from "@/lib/seo";
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const { data } = await getListPage("faqSection", "faq", locale);
+const schema = buildFaqSchema(
+  data.items,
+  new URL(Astro.url.pathname, config.site.base_url).href,
+  locale,
+);
+---
+
+{
+  data.enable && schema && (
+    <section class="section">
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={serializeJsonLd(schema)}
+      />
+      <div class="container section-container">
+        <div class="section-intro centralize">
+          <h2 class="title hasHighlight" set:html={markdownify(data.title)} />
+          <p class="subtitle">{data.description}</p>
+        </div>
+        <div class="mx-auto w-full max-w-3xl space-y-4">
+          {data.items.map((item) => (
+            <Accordion title={item.question} content={item.answer} />
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}

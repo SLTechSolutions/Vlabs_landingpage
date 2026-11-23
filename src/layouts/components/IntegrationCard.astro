@@ -1,0 +1,20 @@
+---
+import DynamicIcon from "@/helpers/DynamicIcon";
+
+interface Props {
+  icon: string;
+  title: string;
+  content: string;
+}
+const { icon, title, content } = Astro.props;
+---
+
+<article class="rounded-2xl border border-border bg-light p-6">
+  <DynamicIcon
+    icon={icon}
+    className="mb-5 text-2xl text-primary"
+    aria-hidden="true"
+  />
+  <h3 class="mb-3 text-xl">{title}</h3>
+  <p>{content}</p>
+</article>

@@ -1,0 +1,70 @@
+---
+import config from "@/config/config.json";
+import Base from "@/layouts/Base.astro";
+import CareerCard from "@/layouts/components/CareerCard.astro";
+import PageHeader from "@/layouts/components/PageHeader.astro";
+import { getListPage, getSinglePage } from "@/lib/contentParser.astro";
+import { canonicalId, localePath, type Locale } from "@/lib/i18n";
+import { getMessages } from "@/lib/messages";
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const copy = getMessages(locale);
+const [page, roles] = await Promise.all([
+  getListPage("careers", "-index", locale),
+  getSinglePage("careers", locale),
+]);
+---
+
+<Base {...page.data} locale={locale}>
+  <PageHeader
+    title={page.data.page_header?.title ?? page.data.title}
+    subtitle={page.data.page_header?.subtitle}
+  />
+  <section class="section pt-0">
+    <div class="container">
+      <div class="notice mb-10">
+        <h2 class="mb-3 text-xl">{copy.careers.statusTitle}</h2>
+        <p>
+          {copy.careers.status}
+        </p>
+      </div>
+      {
+        page.data.role_profiles?.enable && (
+          <div class="section-container" id="role-profiles">
+            <div class="section-intro">
+              <h2 class="title">{page.data.role_profiles.title}</h2>
+              <p>{page.data.role_profiles.content}</p>
+            </div>
+            {roles.length > 0 ? (
+              <div class="grid gap-6 md:grid-cols-2">
+                {roles.map((role) => (
+                  <CareerCard
+                    href={localePath(`/careers/${canonicalId(role.id)}`, locale)}
+                    locale={locale}
+                    title={role.data.title}
+                    description={role.data.description}
+                    discipline={role.data.discipline}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p>{copy.careers.empty}</p>
+            )}
+          </div>
+        )
+      }
+      <div class="notice mt-10">
+        <h2 class="mb-3 text-xl">{copy.careers.questionsTitle}</h2>
+        <p>
+          {copy.careers.questions}
+        </p>
+        <a
+          class="link mt-5 inline-block"
+          href={`mailto:${config.params.footer_email}?subject=${encodeURIComponent(copy.careers.emailSubject)}`}
+          >{copy.careers.email}</a
+        >
+      </div>
+    </div>
+  </section>
+</Base>

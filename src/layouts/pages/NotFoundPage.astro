@@ -1,0 +1,24 @@
+---
+import Base from "@/layouts/Base.astro";
+import { localePath, type Locale } from "@/lib/i18n";
+import { getMessages } from "@/lib/messages";
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const copy = getMessages(locale).notFound;
+---
+
+<Base title={copy.title} description={copy.description} locale={locale} canonicalPath="/404" noindex>
+  <section class="section-ph">
+    <div class="container max-w-3xl text-center">
+      <p class="mb-4 text-6xl font-semibold text-primary" aria-hidden="true">
+        404
+      </p>
+      <h1 class="mb-6 text-h2">{copy.title}</h1>
+      <p>
+        {copy.description}
+      </p>
+      <a href={localePath("/", locale)} class="btn btn-primary mt-8">{copy.back}</a>
+    </div>
+  </section>
+</Base>

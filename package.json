@@ -1,0 +1,60 @@
+{
+  "name": "automark-astro",
+  "version": "1.0.1",
+  "description": "VLABS virtual labs and learning management platform website",
+  "author": "Themefisher",
+  "license": "MIT",
+  "packageManager": "pnpm@11.9.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"node scripts/themeGenerator.js --watch\" \"node --env-file-if-exists=.env --env-file-if-exists=.env.local ./node_modules/astro/bin/astro.mjs dev\"",
+    "build": "node scripts/themeGenerator.js && node --env-file-if-exists=.env --env-file-if-exists=.env.local ./node_modules/astro/bin/astro.mjs build",
+    "preview": "node --env-file-if-exists=.env --env-file-if-exists=.env.local ./node_modules/astro/bin/astro.mjs preview",
+    "start": "node --env-file-if-exists=.env --env-file-if-exists=.env.local dist/server/entry.mjs",
+    "check": "node --env-file-if-exists=.env --env-file-if-exists=.env.local ./node_modules/astro/bin/astro.mjs check",
+    "check:site": "node scripts/check-site.mjs",
+    "test:api": "node scripts/test-api.mjs",
+    "test:theme": "node --test scripts/test-theme.mjs",
+    "test:utils": "node --experimental-strip-types --test scripts/test-utils.mjs",
+    "format": "prettier -w ./src",
+    "deploy:cf-workers": "npm run build && wrangler deploy",
+    "preview:cf-workers": "npm run build && wrangler dev"
+  },
+  "dependencies": {
+    "@astrojs/node": "11.1.12",
+    "@astrojs/react": "6.0.6",
+    "@astrojs/sitemap": "3.7.4",
+    "@digi4care/astro-google-tagmanager": "^2.1.0",
+    "astro": "7.3.8",
+    "marked": "^18.0.5",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-icons": "^5.6.0",
+    "sanitize-html": "2.18.1",
+    "sharp": "^0.35.5",
+    "stripe": "^22.3.0",
+    "vite": "^8.3.7"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.12",
+    "@astrojs/markdown-remark": "^7.3.2",
+    "@tailwindcss/forms": "^0.5.11",
+    "@tailwindcss/typography": "^0.5.20",
+    "@tailwindcss/vite": "^4.3.1",
+    "@types/node": "26.0.1",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "@types/sanitize-html": "2.16.0",
+    "concurrently": "^10.0.3",
+    "prettier": "^3.8.5",
+    "prettier-plugin-astro": "^0.14.1",
+    "prettier-plugin-tailwindcss": "^0.8.0",
+    "tailwindcss": "^4.3.1",
+    "typescript": "^6.0.3",
+    "wrangler": "^4.105.0"
+  },
+  "overrides": {
+    "astro": "$astro",
+    "typescript": "$typescript"
+  }
+}

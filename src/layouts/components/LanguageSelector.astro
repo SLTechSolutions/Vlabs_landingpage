@@ -1,0 +1,35 @@
+---
+import { localePath, type Locale } from "@/lib/i18n";
+import { getMessages } from "@/lib/messages";
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const copy = getMessages(locale).common;
+const choices = [
+  { locale: "en" as const, label: "English · USD" },
+  { locale: "vi" as const, label: "Tiếng Việt · VND" },
+];
+---
+
+<details class="locale-selector" data-locale-selector>
+  <summary aria-label={copy.languageSelector} aria-controls="locale-options">
+    <span aria-hidden="true">{locale.toUpperCase()}</span>
+    <span class="locale-chevron" aria-hidden="true"></span>
+  </summary>
+  <div class="locale-options" id="locale-options">
+    <ul>
+      {choices.map((choice) => (
+        <li>
+          <a
+            href={`${localePath(Astro.url.pathname, choice.locale)}?lang=${choice.locale}`}
+            data-locale-choice={choice.locale}
+            lang={choice.locale}
+            hreflang={choice.locale}
+            aria-current={locale === choice.locale ? "true" : undefined}
+          >{choice.label}</a>
+        </li>
+      ))}
+    </ul>
+    <p class="form-help">{copy.languageHelp}</p>
+  </div>
+</details>

@@ -1,0 +1,25 @@
+---
+import FeatureCard from "@/layouts/components/FeatureCard.astro";
+import { markdownify } from "@/lib/utils/textConverter";
+import type { OurFeaturesSection } from "@/types";
+
+interface Props {
+  our_features: OurFeaturesSection;
+}
+const { our_features } = Astro.props;
+---
+
+<section class="section bg-light">
+  <div class="container section-container">
+    <div class="section-intro centralize">
+      <h2
+        class="title hasHighlight"
+        set:html={markdownify(our_features.title)}
+      />
+      <p class="subtitle">{our_features.content}</p>
+    </div>
+    <div class="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
+      {our_features.items.map((item) => <FeatureCard {...item} />)}
+    </div>
+  </div>
+</section>

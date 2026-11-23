@@ -1,0 +1,90 @@
+---
+import PricingCard from "./PricingCard.astro";
+import { getListPage } from "@/lib/contentParser.astro";
+import { markdownify } from "@/lib/utils/textConverter";
+import type { Locale } from "@/lib/i18n";
+import { getMessages } from "@/lib/messages";
+import { planById } from "@/lib/locale-pricing";
+
+interface Props {
+  locale: Locale;
+  title?: string;
+  content?: string;
+  isHome?: boolean;
+}
+const { title, content, isHome = true, locale } = Astro.props;
+const copy = getMessages(locale).pricing;
+const [pricing, canonicalPricing] = await Promise.all([
+  getListPage("pricing", "-index", locale),
+  getListPage("pricing", "-index", "en"),
+]);
+const { data } = pricing;
+---
+
+<section
+  class:list={["section", { "pt-0": !isHome }]}
+  id="pricing"
+  data-pricing-section
+>
+  <div class="container section-container">
+    {
+      isHome && (
+        <div class="section-intro centralize">
+          <h2
+            class="title hasHighlight"
+            set:html={markdownify(title ?? data.page_header.title)}
+          />
+          <p class="subtitle">{content ?? data.page_header.content}</p>
+        </div>
+      )
+    }
+    <div>
+      <fieldset class="billing-selector" data-billing-selector disabled>
+        <legend class="form-label text-center">{copy.billing}</legend>
+        <div class="billing-options">
+          <label class="billing-option" for="billing-month">
+            <input
+              type="radio"
+              id="billing-month"
+              name="billing-interval"
+              value="month"
+              checked
+            />
+            {data.toggler.monthly_label}
+          </label>
+          <label class="billing-option" for="billing-year">
+            <input
+              type="radio"
+              id="billing-year"
+              name="billing-interval"
+              value="year"
+            />
+            {data.toggler.yearly_label}
+          </label>
+        </div>
+      </fieldset>
+      <p
+        class="billing-note"
+        data-billing-note
+        data-month-note={copy.monthlyNote}
+        data-year-note={copy.yearlyNote}
+        role="status"
+        aria-live="polite"
+      >
+        {copy.monthlyNote}
+      </p>
+      <noscript
+        ><p class="form-help mb-6 text-center">
+          {copy.noScript}
+        </p></noscript
+      >
+      <div class="grid gap-6 lg:grid-cols-3">
+        {data.plans.map((plan) => <PricingCard {...plan} locale={locale} canonicalPlan={planById(canonicalPricing.data.plans, plan.plan_id)} />)}
+      </div>
+    </div>
+    <p class="text-sm text-text-dark">
+      {copy.availability}
+    </p>
+    <p class="form-help" data-fixed-rate>{copy.fixedRate}</p>
+  </div>
+</section>

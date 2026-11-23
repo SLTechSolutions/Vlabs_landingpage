@@ -1,0 +1,18 @@
+---
+import { markdownify } from "@/lib/utils/textConverter";
+
+interface Props {
+  title: string;
+  subtitle?: string;
+}
+const { title, subtitle } = Astro.props;
+---
+
+<section class="section-ph page-header">
+  <div class="container">
+    <div class="mx-auto max-w-4xl text-center">
+      <h1 class="hasHighlight" set:html={markdownify(title)} />
+      {subtitle && <p class="mx-auto mt-6 max-w-2xl text-lg">{subtitle}</p>}
+    </div>
+  </div>
+</section>

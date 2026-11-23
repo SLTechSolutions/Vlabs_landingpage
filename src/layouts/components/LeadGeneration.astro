@@ -1,0 +1,40 @@
+---
+import EnquiryForm from "./EnquiryForm.astro";
+import { markdownify } from "@/lib/utils/textConverter";
+import type { Homepage } from "@/types";
+import type { Locale } from "@/lib/i18n";
+
+interface Props {
+  locale: Locale;
+  lead_generation: Homepage["lead_generation"];
+}
+const { lead_generation, locale } = Astro.props;
+---
+
+<section class="section">
+  <div class="container grid gap-10 lg:grid-cols-2 lg:gap-16">
+    <div>
+      <h2
+        class="mb-6 hasHighlight"
+        set:html={markdownify(lead_generation.title)}
+      />
+      <h3 class="mb-4 text-xl">{lead_generation.subtitle}</h3>
+      <p>{lead_generation.content}</p>
+      <ul class="mt-7 list-disc space-y-4 pl-5 marker:text-primary">
+        {lead_generation.list.map((item) => <li>{item}</li>)}
+      </ul>
+    </div>
+    <div class="rounded-2xl border border-border bg-light p-6 md:p-8">
+      {
+        lead_generation.button.enable && (
+          <EnquiryForm
+            locale={locale}
+            id="lead-form"
+            kind="lead"
+            submitLabel={lead_generation.button.label}
+          />
+        )
+      }
+    </div>
+  </div>
+</section>

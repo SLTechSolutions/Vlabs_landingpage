@@ -1,0 +1,28 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { getMessages } from "@/lib/messages";
+
+interface Props {
+  locale: Locale;
+  title: string;
+  description?: string;
+  discipline?: string;
+  href: string;
+}
+const { title, description, discipline, href, locale } = Astro.props;
+const copy = getMessages(locale).careers;
+---
+
+<article class="rounded-2xl border border-border bg-light p-6 md:p-8">
+  <p class="mb-3 text-sm font-semibold text-primary">{copy.cardLabel}</p>
+  <h3 class="mb-4 text-2xl"><a href={href} class="heading-link">{title}</a></h3>
+  {description && <p>{description}</p>}
+  {
+    discipline && (
+      <p class="mt-4 text-sm text-text-dark">{copy.area}: {discipline}</p>
+    )
+  }
+  <a href={href} class="link mt-6 inline-block"
+    >{copy.view}<span class="sr-only">: {title}</span></a
+  >
+</article>

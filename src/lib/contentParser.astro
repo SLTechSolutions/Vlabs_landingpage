@@ -1,0 +1,70 @@
+---
+import {
+  getCollection,
+  getEntry,
+  type CollectionEntry,
+  type CollectionKey,
+} from "astro:content";
+import { canonicalId, entryLocale, locales, type Locale } from "@/lib/i18n";
+
+type DraftData = {
+  draft?: boolean;
+};
+
+export const getSinglePage = async <C extends CollectionKey>(
+  collectionName: C,
+  locale: Locale = "en",
+): Promise<CollectionEntry<C>[]> => {
+  const entries = await getCollection(collectionName);
+  // Validate the full collection before excluding drafts/indexes, never silently
+  // build an English fallback or lose a route when a translation is missing.
+  for (const entry of entries) {
+    const id = canonicalId(entry.id);
+    for (const language of locales) {
+      if (
+        !entries.some(
+          (candidate) =>
+            entryLocale(candidate.id) === language &&
+            canonicalId(candidate.id) === id,
+        )
+      ) {
+        throw new Error(
+          `Missing ${language} translation: ${collectionName}/${id}`,
+        );
+      }
+    }
+  }
+  const localized = entries
+    .filter(({ id }) => entryLocale(id) === locale)
+    .filter(
+      ({ data, id }) =>
+        !(data as DraftData).draft &&
+        !canonicalId(id).split("/").at(-1)?.startsWith("-"),
+    );
+  return localized;
+};
+
+export const getListPage = async <C extends CollectionKey>(
+  collectionName: C,
+  documentId: string,
+  locale: Locale = "en",
+): Promise<CollectionEntry<C>> => {
+  const id = canonicalId(documentId);
+  const qualifiedId = locale === "vi" ? `vi/${id}` : id;
+  const data = await getEntry(collectionName, qualifiedId);
+
+  if (!data) {
+    throw new Error(`Missing ${locale} translation: ${collectionName}/${id}`);
+  }
+
+  const counterpartId = locale === "vi" ? id : `vi/${id}`;
+  if (!(await getEntry(collectionName, counterpartId))) {
+    throw new Error(
+      `Missing ${locale === "vi" ? "en" : "vi"} translation: ${collectionName}/${id}`,
+    );
+  }
+
+  // Astro's generic overload keeps a conditional type after the existence check.
+  return data as CollectionEntry<C>;
+};
+---

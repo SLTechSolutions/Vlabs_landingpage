@@ -1,0 +1,156 @@
+---
+import Base from "@/layouts/Base.astro";
+import BusinessNeeds from "@/layouts/components/BusinessNeeds.astro";
+import CallToAction from "@/layouts/components/CallToAction.astro";
+import Faq from "@/layouts/components/Faq.astro";
+import ImageMod from "@/layouts/components/ImageMod.astro";
+import ScreenshotLightbox from "@/layouts/components/ScreenshotLightbox.astro";
+import { getListPage } from "@/lib/contentParser.astro";
+import { markdownify } from "@/lib/utils/textConverter";
+import type { Features } from "@/types";
+import { localizeHref, type Locale } from "@/lib/i18n";
+import { getMessages, getScreenshotCopy } from "@/lib/messages";
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const copy = getMessages(locale);
+const features = await getListPage("features", "-index", locale);
+const featuresData: Features = features.data;
+const heroScreen = getScreenshotCopy(featuresData.banner.image, locale);
+---
+
+<Base {...featuresData} locale={locale}>
+  <section class="section-ph hero-section">
+    <div class="container grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+      <div class="hero-copy">
+        <h1
+          class="hasHighlight"
+          set:html={markdownify(featuresData.banner.title)}
+        />
+        <p class="hero-description">{featuresData.banner.content}</p>
+        <div class="hero-actions">
+          {
+            featuresData.banner.button_primary.enable && (
+              <a
+                class="btn btn-primary"
+                href={localizeHref(
+                  featuresData.banner.button_primary.link,
+                  locale,
+                )}
+              >
+                {featuresData.banner.button_primary.label}
+              </a>
+            )
+          }
+          {
+            featuresData.banner.button_secondary.enable && (
+              <a
+                class="btn btn-outline"
+                href={localizeHref(
+                  featuresData.banner.button_secondary.link,
+                  locale,
+                )}
+              >
+                {featuresData.banner.button_secondary.label}
+              </a>
+            )
+          }
+        </div>
+      </div>
+      <figure class="hero-visual product-figure">
+        <ScreenshotLightbox locale={locale} caption={heroScreen?.caption}>
+          <ImageMod
+            src={featuresData.banner.image}
+            alt={heroScreen?.alt ?? copy.alt.features}
+            width={heroScreen ? 1440 : 560}
+            height={heroScreen ? 960 : 420}
+            loading="eager"
+            fetchpriority="high"
+            class={heroScreen ? "product-screenshot" : "w-full"}
+          />
+        </ScreenshotLightbox>
+        {
+          heroScreen && (
+            <figcaption class="screenshot-caption">
+              {heroScreen.caption}
+            </figcaption>
+          )
+        }
+      </figure>
+    </div>
+  </section>
+
+  {
+    featuresData.roles.enable && (
+      <>
+        <div class="container section-intro centralize pt-10 md:pt-14">
+          <h2
+            class="title hasHighlight"
+            set:html={markdownify(featuresData.roles.title)}
+          />
+        </div>
+        {featuresData.roles.items.map((role, index) => {
+          const reverse = index % 2 === 1;
+          const screen = getScreenshotCopy(role.image, locale);
+          return (
+            <section
+              class="section-sm"
+              id={role.id}
+              aria-labelledby={`${role.id}-title`}
+            >
+              <div class="container">
+                <div class="screenshot-card-frame grid grid-cols-1 overflow-hidden rounded-2xl lg:grid-cols-2">
+                  <div
+                    class={`grid content-center p-6 md:p-10 ${reverse ? "lg:order-2" : ""}`}
+                  >
+                    <h3
+                      id={`${role.id}-title`}
+                      class="mb-4 text-h3 hasHighlight"
+                      set:html={markdownify(role.title)}
+                    />
+                    <p>{role.content}</p>
+                    <ul class="mt-6 list-disc space-y-3 pl-5 marker:text-primary">
+                      {role.points.map((point) => (
+                        <li>{point}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <figure
+                    class="product-figure grid content-center bg-light p-4 md:p-6"
+                    data-screenshot-src={role.image}
+                  >
+                    <ScreenshotLightbox
+                      locale={locale}
+                      caption={screen?.caption}
+                    >
+                      <ImageMod
+                        src={role.image}
+                        alt={screen?.alt ?? copy.alt.platform}
+                        width={screen ? 1440 : 480}
+                        height={screen ? 960 : 360}
+                        class={
+                          screen ? "product-screenshot" : "w-full max-w-md"
+                        }
+                      />
+                    </ScreenshotLightbox>
+                    {screen && (
+                      <figcaption class="screenshot-caption">
+                        {screen.caption}
+                      </figcaption>
+                    )}
+                  </figure>
+                </div>
+              </div>
+            </section>
+          );
+        })}
+      </>
+    )
+  }
+
+  <BusinessNeeds locale={locale} />
+  <Faq locale={locale} />
+  <CallToAction locale={locale} />
+</Base>

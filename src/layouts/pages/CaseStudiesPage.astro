@@ -1,0 +1,54 @@
+---
+import Base from "@/layouts/Base.astro";
+import CallToAction from "@/layouts/components/CallToAction.astro";
+import CaseStudyCard from "@/layouts/components/CaseStudyCard.astro";
+import PageHeader from "@/layouts/components/PageHeader.astro";
+import { getListPage, getSinglePage } from "@/lib/contentParser.astro";
+import { canonicalId, localePath, type Locale } from "@/lib/i18n";
+import { getMessages } from "@/lib/messages";
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const copy = getMessages(locale);
+const [page, caseStudies] = await Promise.all([
+  getListPage("caseStudy", "-index", locale),
+  getSinglePage("caseStudy", locale),
+]);
+---
+
+<Base {...page.data} locale={locale}>
+  <PageHeader
+    title={page.data.page_header?.title ?? page.data.title}
+    subtitle={page.data.page_header?.subtitle}
+  />
+  <section class="section pt-0">
+    <div class="container">
+      <div class="notice mb-8">
+        <h2 class="mb-3 text-xl">{copy.caseStudy.indexTitle}</h2>
+        <p>
+          {copy.caseStudy.indexNotice}
+        </p>
+      </div>
+      {
+        caseStudies.length > 0 ? (
+          <div class="grid gap-6 md:grid-cols-2">
+            {caseStudies.map((study) => (
+              <CaseStudyCard
+                href={localePath(`/case-study/${canonicalId(study.id)}`, locale)}
+                locale={locale}
+                image={study.data.image}
+                title={study.data.title}
+                description={study.data.description}
+              />
+            ))}
+          </div>
+        ) : (
+          <p>
+            {copy.caseStudy.empty}
+          </p>
+        )
+      }
+    </div>
+  </section>
+  <CallToAction locale={locale} />
+</Base>

@@ -1,0 +1,22 @@
+---
+import CaseStudyPage from "@/layouts/pages/CaseStudyPage.astro";
+import NotFoundPage from "@/layouts/pages/NotFoundPage.astro";
+import { getSinglePage } from "@/lib/contentParser.astro";
+import { canonicalId } from "@/lib/i18n";
+
+// All case-study details are withdrawn; retain their content and existing template.
+const withdrawn = true;
+const studies = withdrawn ? [] : await getSinglePage("caseStudy", "en");
+const study = studies.find(
+  (entry) => canonicalId(entry.id) === Astro.params.single,
+);
+if (!study) Astro.response.status = 404;
+---
+
+{
+  study ? (
+    <CaseStudyPage study={study} locale="en" />
+  ) : (
+    <NotFoundPage locale="en" />
+  )
+}

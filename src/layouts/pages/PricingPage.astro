@@ -1,0 +1,143 @@
+---
+import Base from "@/layouts/Base.astro";
+import CallToAction from "@/layouts/components/CallToAction.astro";
+import Faq from "@/layouts/components/Faq.astro";
+import PageHeader from "@/layouts/components/PageHeader.astro";
+import PricingSection from "@/layouts/components/PricingSection.astro";
+import { getListPage } from "@/lib/contentParser.astro";
+import { markdownify } from "@/lib/utils/textConverter";
+import type { Pricing } from "@/types";
+import type { Locale } from "@/lib/i18n";
+import { getMessages } from "@/lib/messages";
+import { planAmounts, planById } from "@/lib/locale-pricing";
+import config from "@/config/config.json";
+import { localePath } from "@/lib/i18n";
+import { buildPricingSchema, serializeJsonLd } from "@/lib/seo";
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const copy = getMessages(locale);
+const [pricing, canonicalPricing] = await Promise.all([
+  getListPage("pricing", "-index", locale),
+  getListPage("pricing", "-index", "en"),
+]);
+const pricingData: Pricing = pricing.data;
+const pricingSchema = buildPricingSchema(
+  pricingData.plans.map((plan) => ({
+    id: plan.plan_id,
+    title: plan.title,
+    description: plan.description,
+    ...planAmounts(
+      planById(canonicalPricing.data.plans, plan.plan_id),
+      plan,
+      locale,
+    ),
+  })),
+  new URL(localePath("/pricing", locale), config.site.base_url).href,
+  config.site.base_url,
+  locale,
+  copy.pricing.availability,
+);
+---
+
+<Base {...pricingData} locale={locale} markdownPath="/pricing.md">
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={serializeJsonLd(pricingSchema)}
+  />
+  <PageHeader
+    title={pricingData.page_header.title}
+    subtitle={pricingData.page_header.content}
+  />
+  <div class="container">
+    <p class="form-help mb-6">
+      <a class="link" href="/pricing.md">{copy.seo.pricingMarkdown}</a>
+    </p>
+  </div>
+  <PricingSection isHome={false} locale={locale} />
+
+  {
+    pricingData.comparison.enable && (
+      <section class="section">
+        <div class="container section-container">
+          <div class="section-intro centralize">
+            <h2
+              class="title hasHighlight"
+              set:html={markdownify(pricingData.comparison.title)}
+            />
+          </div>
+          <div
+            class="table-scroll"
+            role="region"
+            aria-label={copy.pricing.comparison}
+            tabindex="0"
+          >
+            <table class="plan-table">
+              <caption class="sr-only">{copy.pricing.caption}</caption>
+              <thead>
+                <tr>
+                  {pricingData.comparison.headers.map((header) => (
+                    <th scope="col">{header.label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {pricingData.comparison.rows.map((row) => (
+                  <tr data-comparison-kind={row.kind}>
+                    <th scope="row">{row.feature}</th>
+                    {row.kind === "monthly_price" || row.kind === "yearly_price"
+                      ? pricingData.comparison.headers
+                          .slice(1)
+                          .map((header) => {
+                            if (!header.plan_id)
+                              throw new Error(
+                                "Price comparison header needs an immutable plan_id",
+                              );
+                            const amounts = planAmounts(
+                              planById(
+                                canonicalPricing.data.plans,
+                                header.plan_id,
+                              ),
+                              planById(pricingData.plans, header.plan_id),
+                              locale,
+                            );
+                            const isYearly = row.kind === "yearly_price";
+                            return (
+                              <td
+                                data-plan-id={header.plan_id}
+                                data-currency={amounts.currency}
+                                data-amount-minor={
+                                  isYearly ? amounts.year : amounts.month
+                                }
+                              >
+                                {isYearly
+                                  ? amounts.yearlyDisplay
+                                  : amounts.monthlyDisplay}
+                              </td>
+                            );
+                          })
+                      : row.values.map((value) => (
+                          <td>
+                            {typeof value === "boolean"
+                              ? value
+                                ? copy.pricing.included
+                                : copy.pricing.notIncluded
+                              : value}
+                          </td>
+                        ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p class="text-sm text-text-dark">{copy.pricing.comparisonNote}</p>
+        </div>
+      </section>
+    )
+  }
+  <Faq locale={locale} />
+  <CallToAction locale={locale} />
+</Base>

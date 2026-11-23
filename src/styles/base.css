@@ -1,0 +1,170 @@
+/* Layer scale: header 20, skip link 30. Native dialogs use the browser top layer.
+ * Shape scale: controls 8px, notices 12px, cards/dialogs 16px. */
+:root {
+  --brand-primary: #163a6b;
+  --brand-primary-hover: #0e2750;
+  --focus-color: #163a6b;
+  --form-border: #8793a8;
+  --status-error: #a92635;
+  --status-success: #16603a;
+  --theme-icon-filter: brightness(0);
+  --header-height: 4.5rem;
+  --layer-header: 20;
+  --layer-skip: 30;
+}
+
+html {
+  font-size: 16px;
+  color-scheme: light;
+  background: var(--color-body);
+  scroll-padding-top: calc(var(--header-height) + 1rem);
+  scrollbar-gutter: stable;
+}
+
+body {
+  @apply bg-body font-primary text-base font-normal leading-relaxed text-text antialiased;
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @apply font-secondary font-semibold text-heading;
+  line-height: 1.18;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+
+h1 {
+  font-size: clamp(2.25rem, 4.2vw, 3.75rem);
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+}
+
+h2 {
+  font-size: clamp(1.875rem, 3.1vw, 2.75rem);
+  letter-spacing: -0.025em;
+}
+
+h3 {
+  font-size: 1.5rem;
+}
+
+h4,
+h5,
+h6 {
+  font-size: 1.125rem;
+}
+
+p,
+li,
+dd {
+  overflow-wrap: break-word;
+}
+
+b,
+strong {
+  font-weight: 600;
+}
+
+a,
+button,
+summary {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgb(22 58 107 / 18%);
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus-color);
+  outline-offset: 3px;
+}
+
+[id] {
+  scroll-margin-top: calc(var(--header-height) + 1rem);
+}
+
+[hidden] {
+  display: none !important;
+}
+
+textarea {
+  resize: vertical;
+}
+
+html:has(dialog:modal) {
+  overflow: hidden;
+}
+
+input:-webkit-autofill,
+textarea:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--color-body) inset;
+  box-shadow: 0 0 0 1000px var(--color-body) inset;
+  -webkit-text-fill-color: var(--color-heading);
+}
+
+:root[data-theme="dark"] {
+  --color-body: #11192b;
+  --color-light: #18233a;
+  --color-border: #40516c;
+  --color-heading: #edf2fc;
+  --color-text: #d7e0f0;
+  --color-text-dark: #acbbd3;
+  --color-text-light: #edf2fc;
+  --color-primary: #9db7ee;
+  --color-primary-light: #c6d5f5;
+  --brand-primary: #3b68bc;
+  --brand-primary-hover: #4474c9;
+  --focus-color: #9db7ee;
+  --form-border: #8495b4;
+  --status-error: #ffadb5;
+  --status-success: #9ddbba;
+  --theme-icon-filter: brightness(0) invert(1);
+  color-scheme: dark;
+}
+
+/* Keep navy illustrations legible against dark cards without maintaining a
+ * second set of assets. Icons use their own invert filter. */
+:root[data-theme="dark"] img[src*=".svg"]:not(.theme-icon) {
+  filter: brightness(1.6) saturate(0.9);
+}
+
+/* Without JavaScript, follow the system. Explicit light mode keeps the generated
+ * light tokens even when the system prefers dark. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --color-body: #11192b;
+    --color-light: #18233a;
+    --color-border: #40516c;
+    --color-heading: #edf2fc;
+    --color-text: #d7e0f0;
+    --color-text-dark: #acbbd3;
+    --color-text-light: #edf2fc;
+    --color-primary: #9db7ee;
+    --color-primary-light: #c6d5f5;
+    --brand-primary: #3b68bc;
+    --brand-primary-hover: #4474c9;
+    --focus-color: #9db7ee;
+    --form-border: #8495b4;
+    --status-error: #ffadb5;
+    --status-success: #9ddbba;
+    --theme-icon-filter: brightness(0) invert(1);
+    color-scheme: dark;
+  }
+
+  :root:not([data-theme]) img[src*=".svg"]:not(.theme-icon) {
+    filter: brightness(1.6) saturate(0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

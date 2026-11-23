@@ -1,0 +1,23 @@
+---
+import RegularPage from "@/layouts/pages/RegularPage.astro";
+import NotFoundPage from "@/layouts/pages/NotFoundPage.astro";
+import { getSinglePage } from "@/lib/contentParser.astro";
+import { canonicalId } from "@/lib/i18n";
+
+const withdrawn = ["about", "careers", "case-study"].includes(
+  Astro.params.regular || "",
+);
+const pages = await getSinglePage("pages", "en");
+const page = withdrawn
+  ? undefined
+  : pages.find((entry) => canonicalId(entry.id) === Astro.params.regular);
+if (!page) Astro.response.status = 404;
+---
+
+{
+  page ? (
+    <RegularPage page={page} locale="en" />
+  ) : (
+    <NotFoundPage locale="en" />
+  )
+}

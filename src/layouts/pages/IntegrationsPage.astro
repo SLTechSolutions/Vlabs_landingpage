@@ -1,0 +1,45 @@
+---
+import Base from "@/layouts/Base.astro";
+import CallToAction from "@/layouts/components/CallToAction.astro";
+import Faq from "@/layouts/components/Faq.astro";
+import IntegrationCard from "@/layouts/components/IntegrationCard.astro";
+import PageHeader from "@/layouts/components/PageHeader.astro";
+import { getListPage } from "@/lib/contentParser.astro";
+import type { Integrations } from "@/types";
+import type { Locale } from "@/lib/i18n";
+import { getMessages } from "@/lib/messages";
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const copy = getMessages(locale);
+const integrations = await getListPage("integrations", "-index", locale);
+const integrationsData: Integrations = integrations.data;
+---
+
+<Base {...integrationsData} locale={locale}>
+  <PageHeader
+    title={integrationsData.page_header.title}
+    subtitle={integrationsData.page_header.subtitle}
+  />
+  {
+    integrationsData.integrations.enable && (
+      <section class="section pt-0">
+        <div class="container">
+          <div class="notice mb-8">
+            <h2 class="mb-3 text-xl">{copy.integrations.title}</h2>
+            <p>
+              {copy.integrations.notice}
+            </p>
+          </div>
+          <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {integrationsData.integrations.items.map((item) => (
+              <IntegrationCard {...item} />
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+  <Faq locale={locale} />
+  <CallToAction locale={locale} />
+</Base>

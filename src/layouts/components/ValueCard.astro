@@ -1,0 +1,30 @@
+---
+import ImageMod from "./ImageMod.astro";
+
+interface Props {
+  logo: string;
+  title: string;
+  list?: string[];
+}
+const { logo, title, list = [] } = Astro.props;
+---
+
+<article class="h-full rounded-2xl border border-border bg-light p-6">
+  <ImageMod
+    src={logo}
+    alt=""
+    width={40}
+    height={40}
+    class="mb-5 size-10 theme-icon"
+  />
+  <h3 class="mb-4 text-xl">{title}</h3>
+  {
+    list.length > 0 && (
+      <ul class="list-disc space-y-3 pl-5 text-sm marker:text-primary">
+        {list.map((item) => (
+          <li>{item}</li>
+        ))}
+      </ul>
+    )
+  }
+</article>

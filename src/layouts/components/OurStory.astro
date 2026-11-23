@@ -1,0 +1,71 @@
+---
+import ImageMod from "./ImageMod.astro";
+import ScreenshotLightbox from "./ScreenshotLightbox.astro";
+import { getListPage } from "@/lib/contentParser.astro";
+import { markdownify } from "@/lib/utils/textConverter";
+import { localizeHref, type Locale } from "@/lib/i18n";
+import { getMessages, getScreenshotCopy } from "@/lib/messages";
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const { data } = await getListPage("ourStorySection", "our-story", locale);
+const copy = getMessages(locale).alt;
+const screen = getScreenshotCopy(data.ceo.image, locale);
+---
+
+{
+  data.enable && (
+    <section class="section bg-light">
+      <div class="container grid items-start gap-10 lg:grid-cols-2 lg:gap-16">
+        <figure class="product-figure">
+          <ScreenshotLightbox locale={locale} caption={screen?.caption}>
+            <ImageMod
+              src={data.ceo.image}
+              alt={screen?.alt ?? copy.story}
+              width={screen ? 1440 : 224}
+              height={screen ? 960 : 224}
+              class={
+                screen
+                  ? "product-screenshot"
+                  : "size-48 rounded-2xl object-cover md:size-56"
+              }
+            />
+          </ScreenshotLightbox>
+          {screen && (
+            <figcaption class="screenshot-caption">{screen.caption}</figcaption>
+          )}
+        </figure>
+        <div>
+          <h2 class="mb-6 hasHighlight" set:html={markdownify(data.title)} />
+          <div
+            class="narrative max-w-3xl"
+            set:html={markdownify(data.letter, true)}
+          />
+          {data.letter_points.length > 0 && (
+            <div class="mt-7">
+              {data.letter_points_title && (
+                <h3 class="mb-4 text-xl">{data.letter_points_title}</h3>
+              )}
+              <ul class="list-disc space-y-3 pl-5 marker:text-primary">
+                {data.letter_points.map((point) => (
+                  <li>{point}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {data.closing_content && <p class="mt-6">{data.closing_content}</p>}
+          {data.button.enable && (
+            <a
+              href={localizeHref(data.button.link, locale)}
+              class="btn btn-outline mt-7"
+            >
+              {data.button.label}
+            </a>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}

@@ -1,0 +1,32 @@
+---
+import config from "@/config/config.json";
+import ImageMod from "./ImageMod.astro";
+import { localePath, type Locale } from "@/lib/i18n";
+import { getMessages } from "@/lib/messages";
+
+interface Props {
+  locale: Locale;
+  loading?: "eager" | "lazy";
+}
+const { loading = "lazy", locale } = Astro.props;
+const { logo, logo_width, logo_height } = config.site;
+---
+
+<a href={localePath("/", locale)} class="navbar-brand" aria-label={getMessages(locale).common.home} translate="no">
+  <ImageMod
+    src={logo}
+    width={Number(logo_width)}
+    height={Number(logo_height)}
+    loading={loading}
+    alt=""
+    class="brand-mark"
+  />
+  <div class="flex flex-col">
+    <span class="text-h5 font-extrabold tracking-tight text-sidebar-foreground leading-none" style={{ color: 'var(--primary)' }}>
+            VLABS
+    </span>
+    <span class="text-[7px] text-sidebar-muted font-semibold uppercase tracking-[0.18em] mt-1.5" style={{ color: 'var(--primary)' }}>
+            Bứt phá mọi giới hạn học tập
+    </span>
+  </div>
+</a>

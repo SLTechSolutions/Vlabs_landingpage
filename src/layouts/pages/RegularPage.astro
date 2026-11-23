@@ -1,0 +1,20 @@
+---
+import Base from "@/layouts/Base.astro";
+import PageHeader from "@/layouts/components/PageHeader.astro";
+import { render, type CollectionEntry } from "astro:content";
+import type { Locale } from "@/lib/i18n";
+
+interface Props { locale: Locale; page: CollectionEntry<"pages"> }
+const { page, locale } = Astro.props;
+const { title, description } = page.data;
+const { Content } = await render(page);
+---
+
+<Base {...page.data} locale={locale}>
+  <PageHeader title={title} subtitle={description} />
+  <section class="section pt-0">
+    <article class="container max-w-3xl content">
+      <Content />
+    </article>
+  </section>
+</Base>

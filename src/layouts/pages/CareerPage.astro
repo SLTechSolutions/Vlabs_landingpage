@@ -1,0 +1,42 @@
+---
+import config from "@/config/config.json";
+import Base from "@/layouts/Base.astro";
+import PageHeader from "@/layouts/components/PageHeader.astro";
+import { render, type CollectionEntry } from "astro:content";
+import { localePath, type Locale } from "@/lib/i18n";
+import { getMessages } from "@/lib/messages";
+
+interface Props { locale: Locale; role: CollectionEntry<"careers"> }
+const { role, locale } = Astro.props;
+const copy = getMessages(locale);
+const { Content } = await render(role);
+---
+
+<Base {...role.data} locale={locale}>
+  <PageHeader title={role.data.title} subtitle={role.data.description} />
+  <section class="section pt-0">
+    <div class="container">
+      <div class="notice mb-10">
+        <h2 class="mb-3 text-xl">{copy.careers.noticeTitle}</h2>
+        <p>
+          {copy.careers.notice}
+        </p>
+      </div>
+      <div class="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <article class="content"><Content /></article>
+        <aside class="notice">
+          <h2 class="mb-4 text-xl">{copy.careers.confirmTitle}</h2>
+          <p>
+            {copy.careers.confirm}
+          </p>
+          <a
+            class="link mt-5 inline-block"
+            href={`mailto:${config.params.footer_email}?subject=${encodeURIComponent(copy.careers.emailSubject)}`}
+            >{copy.careers.email}</a
+          >
+        </aside>
+      </div>
+      <a href={localePath("/careers", locale)} class="btn btn-outline mt-8">{copy.careers.back}</a>
+    </div>
+  </section>
+</Base>

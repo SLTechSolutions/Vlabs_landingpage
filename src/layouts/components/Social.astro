@@ -1,0 +1,30 @@
+---
+import DynamicIcon from "@/helpers/DynamicIcon";
+import type { SocialLink } from "@/types";
+import type { Locale } from "@/lib/i18n";
+import { getMessages } from "@/lib/messages";
+
+interface Props {
+  locale: Locale;
+  source: SocialLink[];
+}
+const { source, locale } = Astro.props;
+const copy = getMessages(locale).common;
+---
+
+<ul class="social-icons" aria-label={copy.social}>
+  {
+    source.map((social) => (
+      <li>
+        <a
+          href={social.link}
+          aria-label={`${social.name} (${copy.newTab})`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <DynamicIcon icon={social.icon} aria-hidden="true" />
+        </a>
+      </li>
+    ))
+  }
+</ul>

@@ -1,0 +1,62 @@
+---
+import Base from "@/layouts/Base.astro";
+import CallToAction from "@/layouts/components/CallToAction.astro";
+import Faq from "@/layouts/components/Faq.astro";
+import ImageMod from "@/layouts/components/ImageMod.astro";
+import OurStory from "@/layouts/components/OurStory.astro";
+import PageHeader from "@/layouts/components/PageHeader.astro";
+import ScreenshotLightbox from "@/layouts/components/ScreenshotLightbox.astro";
+import Features from "@/partials/Features.astro";
+import { getListPage } from "@/lib/contentParser.astro";
+import type { About } from "@/types";
+import type { Locale } from "@/lib/i18n";
+import { getMessages, getScreenshotCopy } from "@/lib/messages";
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const copy = getMessages(locale);
+const about = await getListPage("about", "-index", locale);
+const aboutData: About = about.data;
+const heroScreen = getScreenshotCopy(aboutData.page_header.image, locale);
+---
+
+<Base {...aboutData} locale={locale}>
+  <PageHeader
+    title={aboutData.page_header.title}
+    subtitle={aboutData.page_header.subtitle}
+  />
+  <section class="section-sm pt-0">
+    <figure class="container product-figure">
+      <ScreenshotLightbox locale={locale} caption={heroScreen?.caption}>
+        <ImageMod
+          src={aboutData.page_header.image}
+          alt={heroScreen?.alt ?? copy.alt.about}
+          width={heroScreen ? 1440 : 1200}
+          height={heroScreen ? 960 : 624}
+          loading="eager"
+          fetchpriority="high"
+          class={heroScreen
+            ? "product-screenshot"
+            : "w-full rounded-2xl object-cover"}
+        />
+      </ScreenshotLightbox>
+      {
+        heroScreen && (
+          <figcaption class="screenshot-caption">
+            {heroScreen.caption}
+          </figcaption>
+        )
+      }
+    </figure>
+  </section>
+  <OurStory locale={locale} />
+  {
+    aboutData.core_values.enable && (
+      <Features our_features={aboutData.core_values} />
+    )
+  }
+  <Faq locale={locale} />
+  <CallToAction locale={locale} />
+</Base>

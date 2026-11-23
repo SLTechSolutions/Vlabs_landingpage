@@ -1,0 +1,190 @@
+---
+import Base from "@/layouts/Base.astro";
+import BusinessNeeds from "@/layouts/components/BusinessNeeds.astro";
+import CallToAction from "@/layouts/components/CallToAction.astro";
+import Faq from "@/layouts/components/Faq.astro";
+import ImageMod from "@/layouts/components/ImageMod.astro";
+import LeadGeneration from "@/layouts/components/LeadGeneration.astro";
+import OurStory from "@/layouts/components/OurStory.astro";
+import PricingSection from "@/layouts/components/PricingSection.astro";
+import ProcessCard from "@/layouts/components/ProcessCard.astro";
+import ScreenshotLightbox from "@/layouts/components/ScreenshotLightbox.astro";
+import ValueCard from "@/layouts/components/ValueCard.astro";
+import Features from "@/partials/Features.astro";
+import { getListPage } from "@/lib/contentParser.astro";
+import { markdownify } from "@/lib/utils/textConverter";
+import type { Homepage } from "@/types";
+import { localizeHref, type Locale } from "@/lib/i18n";
+import { getMessages, getScreenshotCopy } from "@/lib/messages";
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const copy = getMessages(locale);
+const homepage = await getListPage("homepage", "-index", locale);
+const homepageData: Homepage = homepage.data;
+const heroScreen = getScreenshotCopy(homepageData.banner.image, locale);
+---
+
+<Base {...homepageData} locale={locale}>
+  <section class="section-ph hero-section">
+    <div class="container grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+      <div class="hero-copy">
+        <h1
+          class="hasHighlight"
+          set:html={markdownify(homepageData.banner.title)}
+        />
+        <p class="hero-description">{homepageData.banner.content}</p>
+        <div class="hero-actions">
+          {
+            homepageData.banner.button_primary.enable && (
+              <a
+                class="btn btn-primary"
+                href={localizeHref(
+                  homepageData.banner.button_primary.link,
+                  locale,
+                )}
+              >
+                {homepageData.banner.button_primary.label}
+              </a>
+            )
+          }
+          {
+            homepageData.banner.button_secondary.enable && (
+              <a
+                class="btn btn-outline"
+                href={localizeHref(
+                  homepageData.banner.button_secondary.link,
+                  locale,
+                )}
+              >
+                {homepageData.banner.button_secondary.label}
+              </a>
+            )
+          }
+        </div>
+      </div>
+      <figure class="hero-visual product-figure">
+        <ScreenshotLightbox locale={locale} caption={heroScreen?.caption}>
+          <ImageMod
+            src={homepageData.banner.image}
+            alt={heroScreen?.alt ?? copy.alt.home}
+            width={heroScreen ? 1440 : 560}
+            height={heroScreen ? 960 : 420}
+            loading="eager"
+            fetchpriority="high"
+            class={heroScreen ? "product-screenshot" : "w-full"}
+          />
+        </ScreenshotLightbox>
+        {
+          heroScreen && (
+            <figcaption class="screenshot-caption">
+              {heroScreen.caption}
+            </figcaption>
+          )
+        }
+      </figure>
+    </div>
+  </section>
+
+  {
+    homepageData.main_features.enable && (
+      <section class="section">
+        <div class="container">
+          <div class="section-container">
+            <div class="section-intro centralize">
+              <h2
+                class="title hasHighlight"
+                set:html={markdownify(homepageData.main_features.title)}
+              />
+              <p class="subtitle">{homepageData.main_features.content}</p>
+            </div>
+            <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {homepageData.main_features.items.map((item) => (
+                <li class="border-l-2 border-primary bg-light px-5 py-4 text-heading">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    homepageData.our_features.enable && (
+      <Features our_features={homepageData.our_features} />
+    )
+  }
+
+  {
+    homepageData.value_props.enable && (
+      <section class="section">
+        <div class="container section-container">
+          <div class="section-intro centralize">
+            <h2
+              class="title hasHighlight"
+              set:html={markdownify(homepageData.value_props.title)}
+            />
+            <p class="subtitle">{homepageData.value_props.content}</p>
+          </div>
+          <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+            {homepageData.value_props.items.map((item) => (
+              <ValueCard {...item} />
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <BusinessNeeds locale={locale} />
+
+  {
+    homepageData.growth_process.enable && (
+      <section class="section">
+        <div class="container section-container">
+          <div class="section-intro centralize">
+            <h2
+              class="title hasHighlight"
+              set:html={markdownify(homepageData.growth_process.title)}
+            />
+          </div>
+          <ol class="grid gap-6 md:grid-cols-3">
+            {homepageData.growth_process.items.map((item) => (
+              <li>
+                <ProcessCard {...item} />
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+    )
+  }
+
+  <OurStory locale={locale} />
+
+  {
+    homepageData.pricing.enable && (
+      <PricingSection
+        locale={locale}
+        title={homepageData.pricing.title}
+        content={homepageData.pricing.content}
+      />
+    )
+  }
+
+  {
+    homepageData.lead_generation.enable && (
+      <LeadGeneration
+        locale={locale}
+        lead_generation={homepageData.lead_generation}
+      />
+    )
+  }
+
+  <Faq locale={locale} />
+  <CallToAction locale={locale} />
+</Base>

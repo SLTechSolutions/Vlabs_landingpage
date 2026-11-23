@@ -1,0 +1,357 @@
+---
+import config from "@/config/config.json";
+import { isLocale, type Locale } from "@/lib/currency";
+import { localizeHref } from "@/lib/i18n";
+import { getMessages } from "@/lib/messages";
+
+interface Props {
+  id: string;
+  kind: "contact" | "lead";
+  submitLabel: string;
+  locale?: Locale;
+}
+const { id, kind, submitLabel, locale = "en" } = Astro.props;
+if (!isLocale(locale)) throw new Error("Unsupported enquiry locale.");
+const isContact = kind === "contact";
+const copy = getMessages(locale).form;
+---
+
+<form
+  id={id}
+  action={`/api/${kind}?lang=${locale}`}
+  method="POST"
+  lang={locale}
+  data-enquiry-form={kind}
+  data-locale={locale}
+  data-form-copy={JSON.stringify(copy)}
+  class="enquiry-form"
+  aria-describedby={`${id}-privacy`}
+>
+  <input type="hidden" name="locale" value={locale} />
+  <p class="text-sm text-text-dark">{copy.allRequired}</p>
+  <div class="form-field">
+    <label class="form-label" for={`${id}-name`}>{copy.name}</label>
+    <input
+      id={`${id}-name`}
+      class="form-input"
+      name="name"
+      type="text"
+      autocomplete="name"
+      maxlength={200}
+      required
+      aria-describedby={`${id}-name-error`}
+    />
+    <span id={`${id}-name-error`} class="field-error"></span>
+  </div>
+  <div class="form-field">
+    <label class="form-label" for={`${id}-email`}>{copy.email}</label>
+    <input
+      id={`${id}-email`}
+      class="form-input"
+      name="email"
+      type="email"
+      inputmode="email"
+      autocomplete="email"
+      spellcheck="false"
+      maxlength={254}
+      pattern={String.raw`[^\s@]+@[^\s@]+\.[^\s@]+`}
+      required
+      aria-describedby={`${id}-email-error`}
+    />
+    <span id={`${id}-email-error`} class="field-error"></span>
+  </div>
+  {
+    isContact && (
+      <>
+        <div class="form-field">
+          <label class="form-label" for={`${id}-phone`}>
+            {copy.phone}
+          </label>
+          <input
+            id={`${id}-phone`}
+            class="form-input"
+            name="phone"
+            type="tel"
+            inputmode="tel"
+            autocomplete="tel"
+            maxlength={50}
+            required
+            aria-describedby={`${id}-phone-help ${id}-phone-error`}
+          />
+          <p id={`${id}-phone-help`} class="form-help">
+            {copy.phoneHelp}
+          </p>
+          <span id={`${id}-phone-error`} class="field-error" />
+        </div>
+        <div class="form-field">
+          <label class="form-label" for={`${id}-message`}>
+            {copy.message}
+          </label>
+          <textarea
+            id={`${id}-message`}
+            class="form-input"
+            name="message"
+            rows={5}
+            autocomplete="off"
+            maxlength={5000}
+            required
+            aria-describedby={`${id}-message-help ${id}-message-error`}
+          />
+          <p id={`${id}-message-help`} class="form-help">
+            {copy.messageHelp}
+          </p>
+          <span id={`${id}-message-error`} class="field-error" />
+        </div>
+      </>
+    )
+  }
+  <p id={`${id}-privacy`} class="form-help">
+    {copy.privacy}{" "}<a
+      class="link"
+      href={localizeHref("/privacy-policy", locale)}>{copy.privacyLink}</a
+    >.
+  </p>
+  <button
+    type="submit"
+    class="btn btn-primary w-full"
+    data-submit-label={submitLabel}>{submitLabel}</button
+  >
+  <p
+    class="form-status"
+    data-form-status
+    role="status"
+    aria-live="polite"
+    aria-atomic="true"
+  >
+  </p>
+  <p class="form-help">
+    {copy.preferEmail}{" "}<a
+      class="link"
+      href={`mailto:${config.params.footer_email}`}
+      >{config.params.footer_email}</a
+    >
+  </p>
+</form>
+
+<script>
+  import type { FormCopy } from "@/lib/messages";
+
+  interface EnquiryResult {
+    success?: boolean;
+    error?: string;
+  }
+
+  document
+    .querySelectorAll<HTMLFormElement>("[data-enquiry-form]")
+    .forEach((form) => {
+      const locale = form.dataset.locale;
+      if (locale !== "en" && locale !== "vi") return;
+      let copy: FormCopy;
+      try {
+        copy = JSON.parse(form.dataset.formCopy ?? "");
+      } catch {
+        // Keep native POST available if enhancement cannot initialize.
+        return;
+      }
+      const button = form.querySelector<HTMLButtonElement>(
+        "button[type='submit']",
+      );
+      const status = form.querySelector<HTMLElement>("[data-form-status]");
+      const fields = Array.from(
+        form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
+          "input:not([type='hidden']), textarea",
+        ),
+      );
+      if (!button || !status) return;
+
+      let pending = false;
+      let dirty = false;
+      let request: AbortController | null = null;
+      let timeout: number | null = null;
+
+      const abortRequest = () => {
+        request?.abort();
+        if (timeout !== null) window.clearTimeout(timeout);
+        timeout = null;
+      };
+      window.addEventListener("pagehide", abortRequest);
+
+      const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+        event.preventDefault();
+      };
+
+      const clearDirty = () => {
+        dirty = false;
+        window.removeEventListener("beforeunload", warnBeforeLeaving);
+      };
+
+      const setStatus = (
+        message: string,
+        state: "pending" | "success" | "error",
+      ) => {
+        status.textContent = message;
+        status.dataset.state = state;
+      };
+
+      const clearFieldError = (
+        field: HTMLInputElement | HTMLTextAreaElement,
+      ) => {
+        field.setCustomValidity("");
+        field.removeAttribute("aria-invalid");
+        const error = document.getElementById(`${field.id}-error`);
+        if (error) error.textContent = "";
+      };
+
+      const requiredMessages: Record<string, string> = {
+        name: copy.requiredName,
+        email: copy.requiredEmail,
+        phone: copy.requiredPhone,
+        message: copy.requiredMessage,
+      };
+      const fieldError = (field: HTMLInputElement | HTMLTextAreaElement) => {
+        if (field.required && !field.value.trim()) {
+          return requiredMessages[field.name] ?? copy.required;
+        }
+        if (
+          field.validity.tooLong ||
+          (field.maxLength >= 0 && field.value.length > field.maxLength)
+        ) {
+          return copy.tooLong;
+        }
+        if (
+          field.name === "email" &&
+          (field.validity.typeMismatch || field.validity.patternMismatch)
+        ) {
+          return copy.invalidEmail;
+        }
+        return field.validity.valid ? "" : copy.required;
+      };
+
+      form.addEventListener("input", (event) => {
+        const field = event.target;
+        if (
+          field instanceof HTMLInputElement ||
+          field instanceof HTMLTextAreaElement
+        ) {
+          clearFieldError(field);
+        }
+        if (!dirty) {
+          dirty = true;
+          window.addEventListener("beforeunload", warnBeforeLeaving);
+        }
+      });
+
+      form.addEventListener(
+        "invalid",
+        (event) => {
+          const field = event.target;
+          if (
+            !(
+              field instanceof HTMLInputElement ||
+              field instanceof HTMLTextAreaElement
+            )
+          )
+            return;
+          // Native bubbles use our copy, never the browser's UI language.
+          const message = fieldError(field) || copy.required;
+          field.setCustomValidity(message);
+          field.setAttribute("aria-invalid", "true");
+          const error = document.getElementById(`${field.id}-error`);
+          if (error) error.textContent = message;
+          setStatus(copy.review, "error");
+        },
+        true,
+      );
+
+      form.addEventListener("reset", () => {
+        fields.forEach(clearFieldError);
+        clearDirty();
+      });
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (pending) return;
+
+        fields.forEach((field) => {
+          clearFieldError(field);
+          field.setCustomValidity(fieldError(field));
+        });
+        if (!form.reportValidity()) return;
+
+        const formData = new FormData(form);
+        const kind = form.dataset.enquiryForm;
+        const payload = {
+          locale,
+          name: String(formData.get("name") ?? "").trim(),
+          email: String(formData.get("email") ?? "").trim(),
+          ...(kind === "contact"
+            ? {
+                phone: String(formData.get("phone") ?? "").trim(),
+                message: String(formData.get("message") ?? "").trim(),
+              }
+            : {}),
+        };
+
+        pending = true;
+        button.disabled = true;
+        button.textContent = copy.sending;
+        form.setAttribute("aria-busy", "true");
+        fields.forEach((field) => {
+          field.readOnly = true;
+        });
+        setStatus(copy.pending, "pending");
+
+        const controller = new AbortController();
+        request = controller;
+        let timedOut = false;
+        timeout = window.setTimeout(() => {
+          timedOut = true;
+          controller.abort();
+        }, 20_000);
+
+        try {
+          const response = await fetch(form.action, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+            signal: controller.signal,
+          });
+          const result: EnquiryResult | null = await response
+            .json()
+            .catch(() => null);
+          if (controller.signal.aborted) throw controller.signal.reason;
+          if (!response.ok || result?.success !== true) {
+            const message =
+              typeof result?.error === "string" && result.error.trim()
+                ? result.error
+                : copy.failed;
+            setStatus(`${message} ${copy.failureHelp}`, "error");
+            return;
+          }
+
+          form.reset();
+          setStatus(
+            kind === "contact" ? copy.contactReceived : copy.leadReceived,
+            "success",
+          );
+        } catch {
+          if (!controller.signal.aborted || timedOut) {
+            setStatus(timedOut ? copy.timeout : copy.connection, "error");
+          }
+        } finally {
+          if (timeout !== null) window.clearTimeout(timeout);
+          timeout = null;
+          if (request === controller) {
+            request = null;
+            pending = false;
+            button.disabled = false;
+            button.textContent = button.dataset.submitLabel ?? copy.submit;
+            form.removeAttribute("aria-busy");
+            fields.forEach((field) => {
+              field.readOnly = false;
+            });
+          }
+        }
+      });
+    });
+</script>

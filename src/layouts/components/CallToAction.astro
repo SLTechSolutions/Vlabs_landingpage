@@ -1,0 +1,29 @@
+---
+import { getListPage } from "@/lib/contentParser.astro";
+import { markdownify } from "@/lib/utils/textConverter";
+import { localizeHref, type Locale } from "@/lib/i18n";
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const { data } = await getListPage("ctaSection", "call-to-action", locale);
+---
+
+{
+  data.enable && (
+    <section class="section-sm">
+      <div class="container">
+        <div class="cta-panel">
+          <div class="max-w-2xl">
+            <h2 class="mb-5 hasHighlight" set:html={markdownify(data.title)} />
+            <p>{data.description}</p>
+          </div>
+          {data.button.enable && (
+            <a href={localizeHref(data.button.link, locale)} class="btn btn-primary">
+              {data.button.label}
+            </a>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}

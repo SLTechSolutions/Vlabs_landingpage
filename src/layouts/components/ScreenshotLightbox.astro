@@ -1,0 +1,172 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { getMessages } from "@/lib/messages";
+
+interface Props {
+  locale: Locale;
+  caption?: string;
+}
+
+const { locale, caption } = Astro.props;
+const copy = getMessages(locale).common;
+---
+
+{
+  caption ? (
+    <>
+      <button
+        type="button"
+        class="screenshot-preview-trigger"
+        aria-label={copy.openPreview}
+        aria-haspopup="dialog"
+        aria-controls="screenshot-lightbox"
+        aria-expanded="false"
+        data-screenshot-preview
+        data-preview-caption={caption}
+        data-preview-close-label={copy.closePreview}
+      >
+        <slot />
+      </button>
+      <template data-screenshot-lightbox-template>
+        <dialog
+          id="screenshot-lightbox"
+          class="screenshot-lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label={copy.closePreview}
+          aria-describedby="screenshot-lightbox-caption"
+        >
+          <div class="screenshot-lightbox-toolbar">
+            <button
+              type="button"
+              class="screenshot-lightbox-close"
+              aria-label={copy.closePreview}
+              data-screenshot-lightbox-close
+            >
+              {copy.closePreview}
+            </button>
+          </div>
+          <figure class="screenshot-lightbox-figure">
+            <div
+              class="screenshot-lightbox-image"
+              data-screenshot-lightbox-image
+            />
+            <figcaption
+              id="screenshot-lightbox-caption"
+              class="screenshot-lightbox-caption"
+            />
+          </figure>
+        </dialog>
+      </template>
+    </>
+  ) : (
+    <slot />
+  )
+}
+
+<script is:inline>
+  (function () {
+    // Inline Astro scripts repeat per instance; wire one shared dialog.
+    if (document.getElementById("screenshot-lightbox")) return;
+    const template = document.querySelector(
+      "template[data-screenshot-lightbox-template]",
+    );
+    const dialog = template?.content.firstElementChild?.cloneNode(true);
+    if (!dialog || typeof dialog.showModal !== "function") return;
+
+    const imageHost = dialog.querySelector("[data-screenshot-lightbox-image]");
+    const closeButton = dialog.querySelector(
+      "[data-screenshot-lightbox-close]",
+    );
+    const captionNode = dialog.querySelector("figcaption");
+    if (!imageHost || !closeButton || !captionNode) return;
+    document.body.append(dialog);
+
+    let preview = null;
+    let startedOnBackdrop = false;
+
+    function restorePreview() {
+      if (!preview) return;
+      const { trigger, image, placeholder, overflow, priority } = preview;
+      preview = null;
+      placeholder.replaceWith(image);
+      if (overflow) {
+        document.body.style.setProperty("overflow", overflow, priority);
+      } else {
+        document.body.style.removeProperty("overflow");
+      }
+      trigger.setAttribute("aria-expanded", "false");
+      trigger.focus({ preventScroll: true });
+    }
+
+    function closePreview() {
+      if (dialog.open) dialog.close();
+      restorePreview();
+    }
+
+    function isBackdrop(event) {
+      if (event.target !== dialog) return false;
+      const bounds = dialog.getBoundingClientRect();
+      return (
+        event.clientX < bounds.left ||
+        event.clientX > bounds.right ||
+        event.clientY < bounds.top ||
+        event.clientY > bounds.bottom
+      );
+    }
+
+    closeButton.addEventListener("click", closePreview);
+    dialog.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      closePreview();
+    });
+    dialog.addEventListener("close", () => {
+      // A queued close event must not reset a preview already reopened.
+      if (!dialog.open) restorePreview();
+    });
+    dialog.addEventListener("pointerdown", (event) => {
+      startedOnBackdrop = isBackdrop(event);
+    });
+    dialog.addEventListener("click", (event) => {
+      const shouldClose = startedOnBackdrop && isBackdrop(event);
+      startedOnBackdrop = false;
+      if (shouldClose) closePreview();
+    });
+
+    document.addEventListener("click", (event) => {
+      const trigger =
+        event.target instanceof Element
+          ? event.target.closest("button[data-screenshot-preview]")
+          : null;
+      if (!trigger || dialog.open) return;
+      const image = trigger.querySelector("img.product-screenshot");
+      if (!image) return;
+
+      // Move the existing image, not a new src/srcset: no extra requests.
+      const bounds = image.getBoundingClientRect();
+      const placeholder = document.createElement("span");
+      placeholder.className = "screenshot-preview-placeholder";
+      placeholder.setAttribute("aria-hidden", "true");
+      placeholder.style.aspectRatio = `${bounds.width || image.width} / ${bounds.height || image.height}`;
+      preview = {
+        trigger,
+        image,
+        placeholder,
+        overflow: document.body.style.getPropertyValue("overflow"),
+        priority: document.body.style.getPropertyPriority("overflow"),
+      };
+
+      image.replaceWith(placeholder);
+      imageHost.append(image);
+      captionNode.textContent = trigger.dataset.previewCaption;
+      const closeLabel = trigger.dataset.previewCloseLabel;
+      closeButton.textContent = closeLabel;
+      closeButton.setAttribute("aria-label", closeLabel);
+      dialog.setAttribute("aria-label", closeLabel);
+      trigger.setAttribute("aria-expanded", "true");
+      document.body.style.setProperty("overflow", "hidden");
+      dialog.showModal();
+      closeButton.focus({ preventScroll: true });
+    });
+  })();
+</script>
